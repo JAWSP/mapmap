@@ -6,7 +6,7 @@
 /*   By: juhpark <juhpark@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/22 11:33:58 by juhpark           #+#    #+#             */
-/*   Updated: 2021/12/14 14:07:35 by juhpark          ###   ########.fr       */
+/*   Updated: 2021/12/14 20:21:29 by juhpark          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,22 @@ namespace ft
 	private:
 		typedef	ft::iterator<ft::bidirectional_iterator_tag, T> iterator_type;
 		typedef	ft::Node<T> 									Node;
-
+//하고나서 const도 맞춰놓으셈
+		Node* who_is_your_parent(Node *node)
+		{
+			Node* res = node;
+			if (res)
+				std::cout << "start : " << res->value.first << std::endl;
+			if (!res)
+				return (NULL);
+			while (res->parent)
+			{
+				if (res)
+					std::cout << "res : " << res->value.first << std::endl;
+				res = res->parent;
+			}
+			return (res);
+		}
 
 		Node* minest(Node *node)
 		{
@@ -51,8 +66,6 @@ namespace ft
 		Node* largest(Node *node)
 		{
 			Node* res = node;
-			if (res)
-				std::cout << "curr : " << res->value.first << std::endl;
 			if (!res)
 				return (NULL);
 			while (res->right)
@@ -69,56 +82,42 @@ namespace ft
 		typedef typename iterator_type::reference				reference;
 		typedef typename iterator_type::pointer					pointer;
 		Node*	current;
-		Node*	root;
+		Node*	max; //넣은 이유 ->end()의 부모
 
-		AVL_iterator() : current(), root() { }
+		AVL_iterator() : current(), max() { }
 		virtual ~AVL_iterator() { }
-		explicit AVL_iterator(Node* n, Node* r) : current(n), root(r) { }
-		AVL_iterator(const AVL_iterator &A) : current(A.current), root(A.root) { }
+		explicit AVL_iterator(Node* n) : current(n), max() { }
+		AVL_iterator(const AVL_iterator &A) : current(A.current), max(A.max) { }
 		AVL_iterator& operator =(const AVL_iterator &A)
 		{
 			if (*this != A)
 			{
 				this->current = A.current;
-				this->root = A.root;
+				this->max = A.max;
 			}
 			return (*this);
 		}
 		
-/*	
-		//const형으로 바꿔주는친구
-		operator AVL_iterator<const T> () const
-		{
-			std::cout << "aaa" << std::endl;
-			return (AVL_iterator<const T>(this->current, this->root));
-		}
-		*/
-		/*
-		//근데 안먹힘
-		iterator cast_const() const
-		{
-			return (iterator(const_cast<typename iterator::Node *>(current, root))
-		}
-		*/
-
 		//전진
 		//기존 tree에 있던 next, prev를 가져옴
 		//근데 접근하기엔 트리를 객체선언을 안해서.. ㅎㅎ
 		//나의 머리론 직접 짜는게 한계인듯 
 		AVL_iterator &operator ++()//전위
 		{
+			Node *root = who_is_your_parent(current);
 		//	std::cout << "curr is " << current->value.first << std::endl;
 			if (current == largest(root))
 			{
-				std::cout << "big" << std::endl;
+				max = current;
 				current = current->right;//end()의식
+		//		std::cout << "big" << max->value.first << std::endl;
 			}
 			else if (root)
 			{
 				if (current->right)
 				{
 					current = minest(current->right);
-					std::cout << "min res : " << current->value.first << std::endl;
+		//			std::cout << "min res : " << current->value.first << std::endl;
 					return (*this);
 				}
 				Node *tmp = current;
@@ -133,8 +132,6 @@ namespace ft
 				else
 					current = tmp->parent;
 			}
-			if (current)
-				std::cout << "res : " << current->value.first << std::endl;
 			return (*this);
 		}
 
@@ -147,15 +144,18 @@ namespace ft
 
 		AVL_iterator &operator --()//전위
 		{
-			if (current == minest(root))
-				current = current->left;
-			else if (root)
+			Node *root = who_is_your_parent(current);
+//			if (current == minest(root))
+//				current = current->left;
+//				최솟값은 나중에
+			if (!root)
 			{
-				if (!current)
-				{
-					current = largest(root); //end면 맨 끝을 갖다대게, 없음 저기서 NULL를 벹
-					return (*this);
-				}
+				current = max; //end면 맨 끝을 갖다대게, 없음 저기서 NULL를 벹
+				std::cout << "biggy " << max->value.first<< std::endl;
+				return (*this);
+			}
+			if (root)
+			{
 				if (current->left)
 				{
 					current = largest(current->left);
@@ -173,6 +173,7 @@ namespace ft
 				else
 					current = tmp->parent;
 			}
+			std::cout << "big" << std::endl;
 			return (*this);
 		}
 
@@ -228,6 +229,18 @@ namespace ft
 		typedef	ft::iterator<ft::bidirectional_iterator_tag, T> iterator_type;
 		typedef	const ft::Node<T> 								Node;
 
+		//루트가 사라졌을 경우 루트갱신이 안되어서
+		//원래 루트가 쟤 멤버변수였는데 지움
+		//그래서 최대 최솟값찾을려면 이렇게 해야지
+		Node* who_is_your_parent(Node *node)
+		{
+			Node* res = node;
+			if (!res)
+				return (NULL);
+			while (res->parent)
+				res = res->parent;
+			return (res);
+		}
 
 		Node* minest(Node *node)
 		{
@@ -258,20 +271,20 @@ namespace ft
 		typedef value_type&										reference;
 		typedef value_type*										pointer;
 		Node*	current;
-		Node*	root;
+		Node*	max; //넣은 이유 ->end()의 부모
 
-		AVL_const_iterator() : current(), root() { }
+		AVL_const_iterator() : current() {}
 		virtual ~AVL_const_iterator() { }
-		explicit AVL_const_iterator(ft::Node<T>* n, ft::Node<T>* r) : current(const_cast<const Node *>(n)), root(const_cast<const Node *>(r)) { }
-		explicit AVL_const_iterator(Node* n, Node* r) : current(n), root(r) { }
-		AVL_const_iterator(const ft::AVL_iterator<T> &A) : current(const_cast<const Node *>(A.current)), root(const_cast<const Node *>(A.root)) { }
-		AVL_const_iterator(const AVL_const_iterator &A) : current(A.current), root(A.root) { }
+		explicit AVL_const_iterator(ft::Node<T>* n) : current(const_cast<const Node *>(n)), max() { }
+		explicit AVL_const_iterator(Node* n) : current(n), max() { }
+		AVL_const_iterator(const ft::AVL_iterator<T> &A) : current(const_cast<const Node *>(A.current)), max(const_cast<const Node *>(A.max)) { }
+		AVL_const_iterator(const AVL_const_iterator &A) : current(A.current), max(A.max) { }
 		AVL_const_iterator& operator =(const AVL_const_iterator &A)
 		{
 			if (*this != A)
 			{
 				this->current = A.current;
-				this->root = A.root;
+				this->max = A.max;
 			}
 			return (*this);
 		}
@@ -279,7 +292,7 @@ namespace ft
 		//const형으로 바꿔주는친구
 		operator AVL_iterator<const T> () const
 		{
-			return (AVL_iterator<const T>(this->current, this->root));
+			return (AVL_iterator<const T>(this->current));
 		}
 		//근데 안먹힘
 
@@ -289,9 +302,9 @@ namespace ft
 		//나의 머리론 직접 짜는게 한계인듯
 		AVL_const_iterator &operator ++()//전위
 		{
-			if (current == largest(root))
+			if (current == largest(who_is_your_parent(current)))
 				current = current->right;
-			else if (root)
+			else if (who_is_your_parent(current))
 			{
 				if (current->right)
 				{
@@ -322,13 +335,13 @@ namespace ft
 
 		AVL_const_iterator &operator --()//전위
 		{
-			if (current == minest(root))
+			if (current == minest(who_is_your_parent(current)))
 				current = current->left;
-			else if (root)
+			else if (who_is_your_parent(current))
 			{
 				if (!current)
 				{
-					current = largest(root); //end면 맨 끝을 갖다대게, 없음 저기서 NULL를 벹
+					current = largest(who_is_your_parent(current)); //end면 맨 끝을 갖다대게, 없음 저기서 NULL를 벹
 					return (*this);
 				}
 				if (current->left)

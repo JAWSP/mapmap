@@ -6,7 +6,7 @@
 /*   By: juhpark <juhpark@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/03 14:28:40 by juhpark           #+#    #+#             */
-/*   Updated: 2021/12/14 15:07:58 by juhpark          ###   ########.fr       */
+/*   Updated: 2021/12/14 20:23:13 by juhpark          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -197,36 +197,36 @@ namespace ft
 
 		//begin,end친구들
 		//그리고 end쪽에서 아무고토 없다면 begin()을 내놓도록 만듦
-		iterator begin() { return (iterator(tree.minest(tree.root), tree.root)); }
-		const_iterator begin() const { return (const_iterator(tree.const_minest(tree.root), tree.root)); }
+		iterator begin() { return (iterator(tree.minest(tree.root))); }
+		const_iterator begin() const { return (const_iterator(tree.const_minest(tree.root))); }
 
 		iterator end()
 		{
 			if (size() == 0)
 				return (begin());
-			return (iterator(tree.largest(tree.root)->right, tree.root));
+			return (++iterator(tree.largest(tree.root)));
 		}
 		const_iterator end() const
 		{
 			if (size() == 0)
 				return (begin());
-			return (const_iterator(tree.const_largest(tree.root)->right, tree.root));
+			return (++const_iterator(tree.const_largest(tree.root)));
 		}
 
-		reverse_iterator rbegin() { return (reverse_iterator(tree.largest(tree.root), tree.root)); }
-		const_reverse_iterator rbegin() const { return (const_reverse_iterator(tree.largest(tree.root), tree.root)); }
+		reverse_iterator rbegin() { return (reverse_iterator(tree.largest(tree.root))); }
+		const_reverse_iterator rbegin() const { return (const_reverse_iterator(tree.largest(tree.root))); }
 
 		reverse_iterator rend()
 		{
 			if (size() == 0)
 				return (rbegin());
-			return (reverse_iterator(tree.minest(tree.root)->left, tree.root));
+			return (reverse_iterator(tree.minest(tree.root)->left));
 		}
 		const_reverse_iterator rend() const
 		{
 			if (size() == 0)
 				return (rbegin());
-			return (const_reverse_iterator(tree.minest(tree.rooot)->left, tree.root));
+			return (const_reverse_iterator(tree.minest(tree.rooot)->left));
 		}
 
 
@@ -249,10 +249,10 @@ namespace ft
 		{
 			Node *target = tree.searchNode(tree.root, value);
 			if (target)
-				return (ft::make_pair(iterator(target, tree.root), false));
+				return (ft::make_pair(iterator(target), false));
 			tree.root = tree.insert(tree.root, NULL, value);
 			target = tree.searchNode(tree.root, value);
-			return (ft::make_pair(iterator(target, tree.root), true));
+			return (ft::make_pair(iterator(target), true));
 		}
 
 		//얜 해당 이터레이터에 값을 넣는 놈
@@ -264,10 +264,10 @@ namespace ft
 			(void)hint;
 			Node *target = tree.searchNode(tree.root, value);
 			if (target)
-				return (iterator(target, tree.root));
+				return (iterator(target));
 			tree.root = tree.insert(tree.root, NULL, value);
 			target = tree.searchNode(tree.root, value);
-			return (iterator(target, tree.root));
+			return (iterator(target));
 		}
 
 		//얜 해당 구간을 채워넣는 그런 구조다 이말이야
@@ -299,10 +299,10 @@ namespace ft
 			{
 				while (first != last)
 				{
-					iterator it = first;
-					++first;
+				//	iterator it = first;
+				//	++first;
 				//	std::cout << it->first << " is removed\n";
-					erase(it);//후위연산자 잡기술, 위는안됨
+					erase(first++);//후위연산자 잡기술, 위는안됨
 				}
 			}
 		}
@@ -340,7 +340,7 @@ namespace ft
 			value_type val = ft::make_pair(key, mapped_type());
 			ft::Node<value_type>* target = tree.searchNode(tree.root, val);
 			if (target)
-				return (iterator(target, tree.root));
+				return (iterator(target));
 			return (end());
 		}
 		
@@ -349,7 +349,7 @@ namespace ft
 			value_type val = ft::make_pair(key, mapped_type());
 			ft::Node<const value_type>* target = tree.searchNode(tree.root, val);
 			if (target)
-				return (const_iterator(target, tree.root));
+				return (const_iterator(target));
 			return (end());
 		}
 
@@ -376,23 +376,23 @@ namespace ft
 					{
 						//if (++iterator(cur, tree.root) == this->end())
 						//	std::cout << "endend" << std::endl;
-						return (++iterator(cur, tree.root));//걔보다 크긴한데 없으면 걔 다음꺼지
+						return (++iterator(cur));//걔보다 크긴한데 없으면 걔 다음꺼지
 					}
 				}
 				else if (cur->value.first == key)
-					return (iterator(cur, tree.root));
+					return (iterator(cur));
 				else
 				{
 					if (cur->left)
 						cur = cur->left;
 					else
-						return (iterator(cur, tree.root));
+						return (iterator(cur));
 				}
 			}
 			if (size() == 0 || cur->value.first == key)//그냥 비어있을때나 맨밑 값이 같은경우
-				return (iterator(cur, tree.root));
+				return (iterator(cur));
 			//std::cout << "next" << std::endl;
-			return (++iterator(cur, tree.root));
+			return (++iterator(cur));
 		}
 		
 		const_iterator lower_bound(const key_type& key) const
@@ -410,22 +410,22 @@ namespace ft
 					if (cur->right)
 						cur = cur->right;
 					else
-						return (++const_iterator(cur, tree.root));
+						return (++const_iterator(cur));
 				}
 				else if (cur->value.first == key)
-					return (const_iterator(cur, tree.root));
+					return (const_iterator(cur));
 				else
 				{
 					if (cur->left)
 						cur = cur->left;
 					else
-						return (const_iterator(cur, tree.root));
+						return (const_iterator(cur));
 				}
 			}
 			if (size() == 0 || cur->value.first == key)
-				return (const_iterator(cur, tree.root));
+				return (const_iterator(cur));
 			//std::cout << "next" << std::endl;
-			return (++const_iterator(cur, tree.root));
+			return (++const_iterator(cur));
 		}
 		
 		//얘보다 작거나 같은 놈인줄 알았냐?
@@ -444,21 +444,21 @@ namespace ft
 					if (cur->right)
 						cur = cur->right;
 					else
-						return (++iterator(cur, tree.root));
+						return (++iterator(cur));
 				}
 				else if (cur->value.first == key)
-					return (++iterator(cur, tree.root));
+					return (++iterator(cur));
 				else
 				{
 					if (cur->left)
 						cur = cur->left;
 					else
-						return (iterator(cur, tree.root));
+						return (iterator(cur));
 				}
 			}
 			if (size() == 0)
-				return (iterator(cur, tree.root));
-			return (++iterator(cur, tree.root));
+				return (iterator(cur));
+			return (++iterator(cur));
 		}
 		
 		const_iterator upper_bound(const key_type& key) const
@@ -475,21 +475,21 @@ namespace ft
 					if (cur->right)
 						cur = cur->right;
 					else
-						return (++const_iterator(cur, tree.root));
+						return (++const_iterator(cur));
 				}
 				else if (cur->value.first == key)
-					return (++const_iterator(cur, tree.root));
+					return (++const_iterator(cur));
 				else
 				{
 					if (cur->left)
 						cur = cur->left;
 					else
-						return (const_iterator(cur, tree.root));
+						return (const_iterator(cur));
 				}
 			}
 			if (size() == 0)
-				return (iterator(cur, tree.root));
-			return (++const_iterator(cur, tree.root));
+				return (iterator(cur));
+			return (++const_iterator(cur));
 		}
 
 		//lower, upper둘다 얻고 싶다면 이걸 쓰시오란 느낌

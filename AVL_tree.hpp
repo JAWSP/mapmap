@@ -6,7 +6,7 @@
 /*   By: juhpark <juhpark@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/15 12:22:36 by juhpark           #+#    #+#             */
-/*   Updated: 2021/12/14 10:54:39 by juhpark          ###   ########.fr       */
+/*   Updated: 2021/12/14 16:39:52 by juhpark          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -412,7 +412,6 @@ namespace ft
 					another->left = node->left;
 					another->right = node->right;
 					another->parent = node->parent;//노드 기준에서 부모 자식 연결
-					std::cout << "which is " << target.first << std::endl;
 					if (node->value == root->value)//root의 부모는 없기 떄문에 바꿔치기
 						root = another;
 					else if (node->parent->left == node)//부모 자식 기준에서 노드 잇기
