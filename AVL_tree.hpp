@@ -6,7 +6,7 @@
 /*   By: juhpark <juhpark@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/15 12:22:36 by juhpark           #+#    #+#             */
-/*   Updated: 2021/12/08 17:06:05 by juhpark          ###   ########.fr       */
+/*   Updated: 2021/12/14 10:54:39 by juhpark          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,9 +28,11 @@ namespace ft
 	struct Node
 	{
 		typedef T			value_type;
+//		typedef const T		const_value_type;
 		struct Node*		left;
 		struct Node*		right;
 		struct Node*		parent;
+		struct Node*		tmp;
 //		->얜 넣으면 빨라지는 대신 복잡해진다는데, 아직 얘를 넣을 필요 모르겠어
 //		이젠 필요해보일듯->생각해보니 --같은 연산자쓸때 바로 접근을 해야하자나
 		value_type			value;
@@ -39,6 +41,9 @@ namespace ft
 		Node() : left(NULL), right(NULL), parent(NULL), value() { }
 
 		Node(value_type& other) : left(NULL), right(NULL), parent(NULL), value(other) { }
+//		Node(Node* lef = NULL, Node* rig = NULL, Node* par = NULL, const value_type& other) : left(lef), right(rig), parent(par), value(other) { }
+		
+	//	Node(Node* lef, Node* rig, Node* par, const value_type& other) : left(lef), right(rig), parent(par), value(other) { }
 
 		Node(const Node& N) : left(N.left), right(N.right), parent(N.parent), value(N.value) { }
 
@@ -100,8 +105,7 @@ namespace ft
 		AVL_tree(const Compare& node_comp = Compare(), const value_allocator_type& value_allocator = value_allocator_type(), const allocator_type& node_allocator = allocator_type())
 			: node_compare(node_comp), value_alloc(value_allocator), node_alloc(node_allocator)
 		{
-			//std::cout << "QQQQ" << std::endl;
-			root = node_alloc.allocate(1);//일단 할당하기만 하고 나중에 값넣을때 값만 넣는걸루
+			root = node_alloc.allocate(1);
 			root->left = NULL;
 			root->right = NULL;
 			root->parent = NULL;
@@ -115,14 +119,14 @@ namespace ft
 		//	curr = other.curr;
 			node_alloc = other.node_alloc;
 			value_alloc = other.value_alloc;
-			node_compare = other.node_comapre;
+			node_compare = other.node_compare;
 			count = other.count;
 		}
 
 //보통 이렇게 되겠지
 		~AVL_tree()
 		{
-			deleteDamn(root);
+		//	deleteDamn(root);
 		//	std::cout << "bye" << std::endl;
 			//파괴자는 어쩌지
 			//쟤 하나만 지워도 되는건가
@@ -183,12 +187,14 @@ namespace ft
 			}
 			else
 				z->left = NULL;
+			if (z->value.first == root->value.first)
+				root = y;
 			return (y);
 		}
 
 		Node* Rotate_RR(Node *z)
 		{
-		//	std::cout << "RR" << std::endl;
+			//std::cout << "RR" << std::endl;
 			Node *y = z->right;
 			Node *T2 = NULL;
 
@@ -204,6 +210,8 @@ namespace ft
 			}
 			else
 				z->right = NULL;
+			if (z->value.first == root->value.first)
+				root = y;
 			return (y);
 		}
 
@@ -261,11 +269,14 @@ namespace ft
 
 		Node* rebalance(Node *node)
 		{
+			if (count < 3)
+				return (node);
 			int BF = get_BF(node);
 			int left_BF = get_BF(node->left);
 			int right_BF = get_BF(node->right);
 
-//			std::cout << "key : " << node->value << " BF : " << BF << std::endl;
+//			std::cout << "key : " << node->value.first << " BF : " << BF << std::endl;
+			/*
 			if (BF > 1 && left_BF == 1)
 				return Rotate_LL(node);
 			else if (BF < -1 && right_BF == -1)
@@ -274,6 +285,15 @@ namespace ft
 				return Rotate_LR(node);
 			else if (BF < -1 && right_BF == 1)
 				return Rotate_RL(node);
+				*/
+			if (BF > 1 && left_BF == -1)
+				return Rotate_LR(node);
+			else if (BF > 1)
+				return Rotate_LL(node);
+			else if (BF < -1 && right_BF == 1)
+				return Rotate_RL(node);
+			else if (BF < -1)
+				return Rotate_RR(node);
 			return (node);
 		}
 
@@ -286,7 +306,7 @@ namespace ft
 			//없거나 끝이면 생성
 			if (node == NULL || count == 0)
 			{
-		//		std::cout << "new node is "<< key.first << std::endl;
+				std::cout << "new node is "<< key.first << std::endl;
 				return new_node(parent, key);
 				//처음엔 node->parent로 했었는데
 				//없는노드에 parent 찾아서 세그먼트남
@@ -301,49 +321,43 @@ namespace ft
 			node = rebalance(node);
 			return (node);
 		}
-/*
-		Node* searchMinest(Node *node)
-		{
-			if (!node)
-				return (NULL);
-			if (!node->left)
-				return (node);
-			else
-				return (searchMinest(node->left));
-		}
-*/
+
 		Node* remove(Node* node, value_type target)
 		{
+			std::cout << "target is " << target.first << " node is " << node->value.first << std::endl;
 			if (node == NULL)
 				return (NULL);
-			if (node->value > target)
+			if (node->value.first > target.first)
 				node->left = remove(node->left, target);
-			else if (node->value < target)
+			else if (node->value.first < target.first)
 				node->right = remove(node->right, target);
-			else if (node->value == target)
+			else if (node->value.first == target.first)
+			//만약에 저걸 저리 둔다면 oop에 대한 로망이 꺠지겠지
 			{
 				//삭제하는경우
 				//1. 자식이 0
 				//2. 자식이 1종
 				//3. 자식이 2종
-				//1.
 				if (node->left == NULL && node->right == NULL)
 				{
-					if (node->parent->left == node)
+					if (node->value == root->value)
+						node_alloc.destroy(node);
+					else if (node->parent->left == node)
 					{
+						std::cout << "3 target is " << target.first << " node is " << node->value.first << std::endl;
 						node->parent->left = NULL;
 						node_alloc.destroy(node);
 						node_alloc.deallocate(node, 1);
-						count--;
 						//위에선 끊고 아래에선 삭제하고
 					}
 					else if (node->parent->right == node)
 					{
+						std::cout << "3 target is " << target.first << " node is " << node->value.first << std::endl;
 						node->parent->right = NULL;
 						node_alloc.destroy(node);
 						node_alloc.deallocate(node, 1);
-						count--;
 					}
+					count--;
 					//여기서 rebalance를 안하는 이유
 					//지가 사라졌는데 그자리에서 확인할 필요가 없다
 					//부모쪽에서 어차피 rebalance로 가기때문
@@ -360,18 +374,23 @@ namespace ft
 					tmp->parent = node->parent;
 					if (node->parent->left == node)
 					{
+						if (node->value == root->value)
+							root = node->left;
+						std::cout << "1 target is " << target.first << " node is " << node->value.first << std::endl;
 						node->parent->left = tmp;
 						node_alloc.destroy(node);
 						node_alloc.deallocate(node, 1);
-						count--;
 					}
 					else if (node->parent->right == node)
 					{
+						if (node->value == root->value)
+							root = node->right;
+						std::cout << "1 target is " << target.first << " node is " << node->value.first << std::endl;
 						node->parent->right = tmp;
 						node_alloc.destroy(node);
 						node_alloc.deallocate(node, 1);
-						count--;
 					}
+					count--;
 					tmp = rebalance(tmp);
 					return (tmp);
 				}
@@ -379,25 +398,59 @@ namespace ft
 				//이어 붙이기엔 애매하니 자식 후보군에서 고른다
 				else if (node->left && node->right)
 				{
+					std::cout << "2 target is " << target.first << " node is " << node->value.first << std::endl;
 					Node *SaChungWang_Jung_CheiYakChoi = minest(node->right);
 					value_type tmp = SaChungWang_Jung_CheiYakChoi->value;
 					//대신할 걸 찾아서
 					node = remove(node, SaChungWang_Jung_CheiYakChoi->value);
 					//기존에 있던 위치를 지우고
-					node->value = tmp;//그냥 값만 바꿔치기이니 값만 바꿔줍시다
-					count--;
-					node = rebalance(node);
-					return (node);
+			//		node->value = tmp;//그냥 값만 바꿔치기이니 값만 바꿔줍시다
+				//임시
+				//원래 값만 바꿀려고 했는데 또또const const거참 유도리가 없어요 엉엉엉
+					Node* another = node_alloc.allocate(1);
+					node_alloc.construct(another, tmp);//새로운 노드를 할당
+					another->left = node->left;
+					another->right = node->right;
+					another->parent = node->parent;//노드 기준에서 부모 자식 연결
+					std::cout << "which is " << target.first << std::endl;
+					if (node->value == root->value)//root의 부모는 없기 떄문에 바꿔치기
+						root = another;
+					else if (node->parent->left == node)//부모 자식 기준에서 노드 잇기
+						node->parent->left = another;
+					else if (node->parent->right == node)
+						node->parent->right = another;
+					if (node->left)
+						node->left->parent = another;//여긴 자식 기준
+					if (node->right)
+						node->right->parent = another;
+					//자식이 2개인데 왜 자식마다 if를 붙이냐? 그 자식이 없앤놈일수도 있자나
+					node_alloc.destroy(node);//바꿔치기 완료했으면 점마 없애
+					node_alloc.deallocate(node, 1);
+					another = rebalance(another);
+					if (root->right)
+						std::cout << "root is " << root->value.first << " right is " << root->right->value.first << std::endl;
+					return (another);
 					//그걸 삭제할 값 대신으로 넣는다
 				}
 			}
 			else
 				return (node);
+//			std::cout << "rebalance " << std::endl;
 			node = rebalance(node);
 			return (node);
 		}
 		//그 다음은 최대,최소값 찾는 노드
 		Node* minest(Node *node)
+		{
+			Node* res = node;
+			if (!res)
+				return (NULL);
+			while (res->left)
+				res = res->left;
+			return (res);
+		}
+		
+		Node* const_minest(Node *node) const
 		{
 			Node* res = node;
 			if (!res)
@@ -419,13 +472,25 @@ namespace ft
 			return (res);
 		}
 
+		Node* const_largest(Node *node) const
+		{
+			Node* res = node;
+			if (!res)
+				return (NULL);
+			while (res->right)
+			{
+				res = res->right;
+			}
+			return (res);
+		}
+
 		//그다음은 다음/이전노드
 		//출력순서대로 다음 이전노드를 하면 될 듯 하다
 		//
-		Node* nextNode(Node *node)
+		Node* nextNode(Node *node) const
 		{
 			if (node->right)
-				return (minest(node->right));//우측 자식이 있으면 최약체를 구한다
+				return (const_minest(node->right));//우측 자식이 있으면 최약체를 구한다
 			//부모로 올라갈때는 계속 우측으로 갔으니 루트이거나 혹은 부모가 누군가의 왼쪽자식일때까지 올라가면 됨
 			Node *tmp = node;
 			while (tmp->parent) //tmp->parent == NULL라면 멈춤
@@ -439,10 +504,10 @@ namespace ft
 			return (tmp->parent);
 		}
 
-		Node* prevNode(Node *node)
+		Node* prevNode(Node *node) const
 		{
 			if (node->left)
-				return (largest(node->left));//좌측 자식이 있다면 좌측 최대로 감
+				return (const_largest(node->left));//좌측 자식이 있다면 좌측 최대로 감
 			Node *tmp = node;
 			while (tmp->parent)
 			{
@@ -515,6 +580,7 @@ namespace ft
 					node = node->parent;
 				if (node->left == del)
 				{
+					std::cout << node->left->value.first << " is deleted" << std::endl;
 					node->left = NULL;
 					node_alloc.destroy(node->left);
 					node_alloc.deallocate(node->left, 1);
@@ -523,6 +589,7 @@ namespace ft
 				}
 				else if (node->right == del)
 				{
+					std::cout << node->right->value.first << " is deleted" << std::endl;
 					node->right = NULL;
 					node_alloc.destroy(node->right);
 					node_alloc.deallocate(node->right, 1);
@@ -531,20 +598,11 @@ namespace ft
 				if (node == rt)
 					cycle++;//왼쪽으로 다 볼일 봤으면 오른쪽으로 가서 사이클을 돌린다
 			}
-			if (node->parent) //마지막으로 기준이 되는 해당 루트를 삭제
-				node = node->parent;
-			if (node->left == del)
+			if (node->parent == NULL) //기준이 곧 루트면 -> 다 지우면 박살나니 값만 없애는걸루
 			{
-				node->left = NULL;
-				node_alloc.destroy(node->left);
-				node_alloc.deallocate(node->left, 1);
-				count--;
-			}
-			else if (node->right == del)
-			{
-				node->right = NULL;
-				node_alloc.destroy(node->right);
-				node_alloc.deallocate(node->right, 1);
+				std::cout << "finally " << node->value.first << " is deleted" << std::endl;
+				node_alloc.destroy(node);
+				std::cout << "and " << node->value.second << std::endl;
 				count--;
 			}
 		}
@@ -586,10 +644,10 @@ namespace ft
 		{
 			if (x.count != y.count)
 				return (false);
-			ft::Node<T>* cur = x.minest();
-			ft::Node<T>* fin = x.largest();
-			ft::Node<T>* cop = y.minest();
-			ft::Node<T>* y_fin = y.largest();
+			ft::Node<T>* cur = x.const_minest(x.root);
+			ft::Node<T>* fin = x.const_largest(x.root);
+			ft::Node<T>* cop = y.const_minest(y.root);
+			ft::Node<T>* y_fin = y.const_largest(y.root);
 			while (cur != fin)
 			{
 				if (cop == y_fin)

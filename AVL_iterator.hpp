@@ -6,7 +6,7 @@
 /*   By: juhpark <juhpark@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/22 11:33:58 by juhpark           #+#    #+#             */
-/*   Updated: 2021/12/08 16:50:28 by juhpark          ###   ########.fr       */
+/*   Updated: 2021/12/14 14:07:35 by juhpark          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,8 @@ namespace ft
 		Node* largest(Node *node)
 		{
 			Node* res = node;
+			if (res)
+				std::cout << "curr : " << res->value.first << std::endl;
 			if (!res)
 				return (NULL);
 			while (res->right)
@@ -83,12 +85,15 @@ namespace ft
 			return (*this);
 		}
 		
-	/*	
+/*	
 		//const형으로 바꿔주는친구
 		operator AVL_iterator<const T> () const
 		{
+			std::cout << "aaa" << std::endl;
 			return (AVL_iterator<const T>(this->current, this->root));
 		}
+		*/
+		/*
 		//근데 안먹힘
 		iterator cast_const() const
 		{
@@ -102,13 +107,18 @@ namespace ft
 		//나의 머리론 직접 짜는게 한계인듯 
 		AVL_iterator &operator ++()//전위
 		{
+		//	std::cout << "curr is " << current->value.first << std::endl;
 			if (current == largest(root))
-				current = current->right;
+			{
+				std::cout << "big" << std::endl;
+				current = current->right;//end()의식
+			}
 			else if (root)
 			{
 				if (current->right)
 				{
 					current = minest(current->right);
+					std::cout << "min res : " << current->value.first << std::endl;
 					return (*this);
 				}
 				Node *tmp = current;
@@ -123,6 +133,8 @@ namespace ft
 				else
 					current = tmp->parent;
 			}
+			if (current)
+				std::cout << "res : " << current->value.first << std::endl;
 			return (*this);
 		}
 
@@ -139,6 +151,11 @@ namespace ft
 				current = current->left;
 			else if (root)
 			{
+				if (!current)
+				{
+					current = largest(root); //end면 맨 끝을 갖다대게, 없음 저기서 NULL를 벹
+					return (*this);
+				}
 				if (current->left)
 				{
 					current = largest(current->left);
@@ -179,12 +196,12 @@ namespace ft
 			return (&current->value);
 		}
 		//그담은 같냐 틀리냐에 대한 연산자
-		bool operator ==(const AVL_iterator& other)
+		bool operator ==(const AVL_iterator& other) const
 		{
 			return (this->current == other.current);
 		}
 
-		bool operator !=(const AVL_iterator& other)
+		bool operator !=(const AVL_iterator& other) const
 		{
 			return (this->current != other.current);
 		}
@@ -209,7 +226,7 @@ namespace ft
 	{
 	private:
 		typedef	ft::iterator<ft::bidirectional_iterator_tag, T> iterator_type;
-		typedef	ft::Node<const T> 								Node;
+		typedef	const ft::Node<T> 								Node;
 
 
 		Node* minest(Node *node)
@@ -236,17 +253,18 @@ namespace ft
 		//그냥 함수로 갱신시키는게 나을듯
 	public:
 		typedef typename iterator_type::iterator_category		iterator_category;
-		typedef typename iterator_type::value_type				value_type;
+		typedef const T											value_type;
 		typedef typename iterator_type::difference_type			difference_type;
-		typedef typename iterator_type::reference				reference;
-		typedef typename iterator_type::pointer					pointer;
+		typedef value_type&										reference;
+		typedef value_type*										pointer;
 		Node*	current;
 		Node*	root;
 
 		AVL_const_iterator() : current(), root() { }
 		virtual ~AVL_const_iterator() { }
+		explicit AVL_const_iterator(ft::Node<T>* n, ft::Node<T>* r) : current(const_cast<const Node *>(n)), root(const_cast<const Node *>(r)) { }
 		explicit AVL_const_iterator(Node* n, Node* r) : current(n), root(r) { }
-		AVL_const_iterator(const ft::AVL_iterator<T> &A) : current(A.current), root(A.root) { std::cout << "ttt" <<std::endl;}
+		AVL_const_iterator(const ft::AVL_iterator<T> &A) : current(const_cast<const Node *>(A.current)), root(const_cast<const Node *>(A.root)) { }
 		AVL_const_iterator(const AVL_const_iterator &A) : current(A.current), root(A.root) { }
 		AVL_const_iterator& operator =(const AVL_const_iterator &A)
 		{
@@ -258,14 +276,12 @@ namespace ft
 			return (*this);
 		}
 
-		/*
 		//const형으로 바꿔주는친구
 		operator AVL_iterator<const T> () const
 		{
 			return (AVL_iterator<const T>(this->current, this->root));
 		}
 		//근데 안먹힘
-		*/
 
 		//전진
 		//기존 tree에 있던 next, prev를 가져옴
@@ -310,6 +326,11 @@ namespace ft
 				current = current->left;
 			else if (root)
 			{
+				if (!current)
+				{
+					current = largest(root); //end면 맨 끝을 갖다대게, 없음 저기서 NULL를 벹
+					return (*this);
+				}
 				if (current->left)
 				{
 					current = largest(current->left);
@@ -343,21 +364,25 @@ namespace ft
 		reference operator *() const
 		{
 			return (current->value);
+			//return (const_cast<const reference>(current->value));
 		}
 
-		pointer	operator ->() const
+		pointer operator ->() const
 		{
+	//		const pointer res = &current->value;
+	//		return (&res);
+	//		return (const_cast<const pointer>(&current->value));
 			return (&current->value);
 		}
 		//그담은 같냐 틀리냐에 대한 연산자
-		bool operator ==(const AVL_const_iterator& other)
+		bool operator ==(const AVL_const_iterator& other) const
 		{
 			return (this->current == other.current);
 		}
 
-		bool operator !=(const AVL_const_iterator& other)
+		bool operator !=(const AVL_const_iterator& other) const
 		{
-			return (this->current != other.current);
+			return (!(*this == other));
 		}
 	};//bid
 

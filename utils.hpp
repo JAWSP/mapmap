@@ -6,7 +6,7 @@
 /*   By: juhpark <juhpark@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/15 10:13:14 by juhpark           #+#    #+#             */
-/*   Updated: 2021/12/08 14:32:34 by juhpark          ###   ########.fr       */
+/*   Updated: 2021/12/10 21:45:42 by juhpark          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -480,7 +480,6 @@ namespace ft
 
 		operator const pair<T1, T2> () const
 		{
-			std::cout << "ccc" << std::endl;
 			return (pair<T1, T2>(this->first, this->second));
 		}
 	};//pair

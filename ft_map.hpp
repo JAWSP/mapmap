@@ -6,7 +6,7 @@
 /*   By: juhpark <juhpark@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/03 14:28:40 by juhpark           #+#    #+#             */
-/*   Updated: 2021/12/08 12:44:16 by juhpark          ###   ########.fr       */
+/*   Updated: 2021/12/14 15:07:58 by juhpark          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,27 +102,44 @@ namespace ft
 			InputIt it = first;
 			while (it != last)
 			{
-				tree.root = tree.insert(tree.root, NULL, it->first);
+				tree.root = tree.insert(tree.root, NULL, *it);
 				it++;
 			}
 		}
 
-		map(const map& other) : tree(other.tree), alloc(other.alloc), comp(other.comp) { }
+		//원래는 tree(other.tree)로 하면 원타치로 되긴한데
+		//그리 하게 되면 어째서인지 원본이 바뀌면 얘도 바뀜
+		map(const map& other) : tree(other.comp, other.alloc), alloc(other.alloc), comp(other.comp) 
+		{
+			this->insert(other.begin(), other.end());
+		}
 
 		//그담은 소멸자
 		~map() { }
 
+		//싹다 갈고 다시 채우고
 		map& operator =(const map& other)
 		{
 			if (*this != other)
 			{
-				this->tree.root = other.root;
-				this->tree.node_alloc = other.node_alloc;
-				this->tree.value_alloc = other.value_alloc;
-				this->tree.node_comapre = other.node_comapre;
-				this->tree.count = other.count;
+				
+			//	std::cout << (--other.end())->second << std::endl;
+
+				clear();
+		//		for (const_iterator it = other.begin(); it != other.end(); it++)
+		//			std::cout << it->second << std::endl;
+				std::cout << "qwqwqw" << std::endl;
+				this->tree.node_alloc = other.tree.node_alloc;
+				this->tree.value_alloc = other.tree.value_alloc;
+				this->tree.node_compare = other.tree.node_compare;
+				this->tree.count = 0;
 				this->alloc = other.alloc;
 				this->comp = other.comp;
+
+				this->insert(other.begin(), other.end());
+	//			std::cout << "after" << std::endl;
+	//			for (const_iterator it = this->begin(); it != this->end(); it++)
+	//				std::cout << it->second << std::endl;
 			}
 			return (*this);
 		}
@@ -138,7 +155,7 @@ namespace ft
 		{
 	//		std::cout << tree.root->value.first << std::endl;
 			ft::Node<value_type>* target;
-			value_type vvv(key, 0);
+			value_type vvv(key, mapped_type());
 			target = tree.searchNode(tree.root, vvv);
 //			std::cout << "!!!" << std::endl;
 	//		std::cout << target->value.first << std::endl;
@@ -150,7 +167,7 @@ namespace ft
 		const mapped_type& at(const key_type& key) const
 		{
 			ft::Node<const value_type>* target;
-			value_type vvv(key, 0);
+			value_type vvv(key, mapped_type());
 			target = tree.searchNode(tree.root, vvv);
 			if (!target)
 				throw (std::out_of_range("map bomwi bursurnam\n"));
@@ -179,17 +196,38 @@ namespace ft
 
 
 		//begin,end친구들
+		//그리고 end쪽에서 아무고토 없다면 begin()을 내놓도록 만듦
 		iterator begin() { return (iterator(tree.minest(tree.root), tree.root)); }
-		const_iterator begin() const { return (const_iterator(tree.minest(tree.root), tree.root)); }
+		const_iterator begin() const { return (const_iterator(tree.const_minest(tree.root), tree.root)); }
 
-		iterator end() { return (iterator(tree.largest(tree.root)->right, tree.root)); }
-		const_iterator end() const { return (const_iterator(tree.largest(tree.root)->right, tree.root)); }
+		iterator end()
+		{
+			if (size() == 0)
+				return (begin());
+			return (iterator(tree.largest(tree.root)->right, tree.root));
+		}
+		const_iterator end() const
+		{
+			if (size() == 0)
+				return (begin());
+			return (const_iterator(tree.const_largest(tree.root)->right, tree.root));
+		}
 
 		reverse_iterator rbegin() { return (reverse_iterator(tree.largest(tree.root), tree.root)); }
 		const_reverse_iterator rbegin() const { return (const_reverse_iterator(tree.largest(tree.root), tree.root)); }
 
-		reverse_iterator rend() { return (reverse_iterator(tree.minest(tree.root)->left, tree.root)); }
-		const_reverse_iterator rend() const { return (const_reverse_iterator(tree.minest(tree.rooot)->left, tree.root)); }
+		reverse_iterator rend()
+		{
+			if (size() == 0)
+				return (rbegin());
+			return (reverse_iterator(tree.minest(tree.root)->left, tree.root));
+		}
+		const_reverse_iterator rend() const
+		{
+			if (size() == 0)
+				return (rbegin());
+			return (const_reverse_iterator(tree.minest(tree.rooot)->left, tree.root));
+		}
 
 
 		//그담은 사이즈, 비어있나, 최대 할당량
@@ -199,7 +237,7 @@ namespace ft
 
 		void clear()
 		{
-			deleteDamn(tree.root);
+			tree.deleteDamn(tree.root);
 		}
 
 		//그담은 값을 추가해주는 insert
@@ -250,23 +288,29 @@ namespace ft
 		
 		void erase(iterator pos)
 		{
-			tree.root = remove(tree.root, *pos);
+			tree.root = tree.remove(tree.root, *pos);
 		}
-		
+
 		void erase(iterator first, iterator last)
 		{
-			iterator it = first;
-			while (it != last)
+			if (first == begin() && last == end())
+				clear();
+			else
 			{
-				tree.root = tree.remove(tree.root, *it);
-				it++;
+				while (first != last)
+				{
+					iterator it = first;
+					++first;
+				//	std::cout << it->first << " is removed\n";
+					erase(it);//후위연산자 잡기술, 위는안됨
+				}
 			}
 		}
 
 		size_type erase(const key_type key)
 		{
-			value_type val = ft::make_pair(key, 0);
-			if (searchNode(tree.root, val))
+			value_type val = ft::make_pair(key, mapped_type());
+			if (tree.searchNode(tree.root, val))
 			{
 				tree.root = tree.remove(tree.root, val);
 				return (1);
@@ -285,7 +329,7 @@ namespace ft
 		
 		size_type count(const key_type key)
 		{
-			value_type val = ft::make_pair(key, 0);
+			value_type val = ft::make_pair(key, mapped_type());
 			if (searchNode(tree.root, val))
 				return (1);
 			return (0);
@@ -293,7 +337,7 @@ namespace ft
 
 		iterator find(const key_type& key)
 		{
-			value_type val = ft::make_pair(key, 0);
+			value_type val = ft::make_pair(key, mapped_type());
 			ft::Node<value_type>* target = tree.searchNode(tree.root, val);
 			if (target)
 				return (iterator(target, tree.root));
@@ -302,7 +346,7 @@ namespace ft
 		
 		const_iterator find(const key_type& key) const
 		{
-			value_type val = ft::make_pair(key, 0);
+			value_type val = ft::make_pair(key, mapped_type());
 			ft::Node<const value_type>* target = tree.searchNode(tree.root, val);
 			if (target)
 				return (const_iterator(target, tree.root));
@@ -313,44 +357,74 @@ namespace ft
 		//a > b -> false
 		iterator lower_bound(const key_type& key)
 		{
+			if (key < tree.minest(tree.root)->value.first)
+				return (this->begin());
 			Node* cur = tree.root;
 			while (1) 
 			{
+				//if (cur->right == NULL)
+				//	std::cout << "yeah" << std::endl;
+//				if (cur == NULL)//제일 크면 없을 수 있지
+//					return (this->end());
 				if (cur->left == NULL && cur->right == NULL)
 					break ;
 				if (comp(cur->value.first, key)) //f < k
-					cur = cur->right;
+				{
+					if (cur->right)
+						cur = cur->right;
+					else
+					{
+						//if (++iterator(cur, tree.root) == this->end())
+						//	std::cout << "endend" << std::endl;
+						return (++iterator(cur, tree.root));//걔보다 크긴한데 없으면 걔 다음꺼지
+					}
+				}
 				else if (cur->value.first == key)
 					return (iterator(cur, tree.root));
 				else
-					cur = cur->left;
+				{
+					if (cur->left)
+						cur = cur->left;
+					else
+						return (iterator(cur, tree.root));
+				}
 			}
-			if (size() == 0)//그냥 비어있을때
-				return (iterator(cur, tree.root));
-			if (cur->parent && cur->parent == cur->parent->right)//이걸 쓴 이유가 뭐지
+			if (size() == 0 || cur->value.first == key)//그냥 비어있을때나 맨밑 값이 같은경우
 				return (iterator(cur, tree.root));
 			//std::cout << "next" << std::endl;
 			return (++iterator(cur, tree.root));
 		}
 		
 		const_iterator lower_bound(const key_type& key) const
-		{
+		{	
+			if (key < tree.const_minest(tree.root)->value.first)
+				return (this->begin());
 			Node* cur = tree.root;
+			//최소값보다 작으면 -> 최소값을 리턴
 			while (1) 
 			{
 				if (cur->left == NULL && cur->right == NULL)
 					break ;
 				if (comp(cur->value.first, key))
-					cur = cur->right;
+				{
+					if (cur->right)
+						cur = cur->right;
+					else
+						return (++const_iterator(cur, tree.root));
+				}
 				else if (cur->value.first == key)
 					return (const_iterator(cur, tree.root));
 				else
-					cur = cur->left;
+				{
+					if (cur->left)
+						cur = cur->left;
+					else
+						return (const_iterator(cur, tree.root));
+				}
 			}
-			if (size() == 0)
+			if (size() == 0 || cur->value.first == key)
 				return (const_iterator(cur, tree.root));
-			if (cur->parent && cur->parent == cur->parent->right)
-				return (const_iterator(cur, tree.root));
+			//std::cout << "next" << std::endl;
 			return (++const_iterator(cur, tree.root));
 		}
 		
@@ -358,42 +432,62 @@ namespace ft
 		//쟌넨 그냥 큰놈입니다
 		iterator upper_bound(const key_type& key)
 		{
+			if (key < tree.minest(tree.root)->value.first)
+				return (this->begin());
 			Node* cur = tree.root;
 			while (1) 
 			{
 				if (cur->left == NULL && cur->right == NULL)
 					break ;
 				if (comp(cur->value.first, key))
-					cur = cur->right;
+				{
+					if (cur->right)
+						cur = cur->right;
+					else
+						return (++iterator(cur, tree.root));
+				}
 				else if (cur->value.first == key)
 					return (++iterator(cur, tree.root));
 				else
-					cur = cur->left;
+				{
+					if (cur->left)
+						cur = cur->left;
+					else
+						return (iterator(cur, tree.root));
+				}
 			}
 			if (size() == 0)
-				return (iterator(cur, tree.root));
-			if (cur->parent == cur->parent->right)
 				return (iterator(cur, tree.root));
 			return (++iterator(cur, tree.root));
 		}
 		
 		const_iterator upper_bound(const key_type& key) const
 		{
+			if (key < tree.const_minest(tree.root)->value.first)
+				return (this->begin());
 			Node* cur = tree.root;
 			while (1) 
 			{
 				if (cur->left == NULL && cur->right == NULL)
 					break ;
 				if (comp(cur->value.first, key))
-					cur = cur->right;
+				{
+					if (cur->right)
+						cur = cur->right;
+					else
+						return (++const_iterator(cur, tree.root));
+				}
 				else if (cur->value.first == key)
 					return (++const_iterator(cur, tree.root));
 				else
-					cur = cur->left;
+				{
+					if (cur->left)
+						cur = cur->left;
+					else
+						return (const_iterator(cur, tree.root));
+				}
 			}
 			if (size() == 0)
-				return (iterator(cur, tree.root));
-			if (cur->parent == cur->parent->right)
 				return (iterator(cur, tree.root));
 			return (++const_iterator(cur, tree.root));
 		}
