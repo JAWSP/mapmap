@@ -6,7 +6,7 @@
 /*   By: juhpark <juhpark@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/03 14:28:40 by juhpark           #+#    #+#             */
-/*   Updated: 2021/12/14 20:23:13 by juhpark          ###   ########.fr       */
+/*   Updated: 2021/12/16 11:59:46 by juhpark          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,22 +42,22 @@ namespace ft
 	class map
 	{
 	public:
-		typedef Key												key_type;
-		typedef T												mapped_type;
-		typedef ft::pair<const Key, T>							value_type;
-		typedef size_t											size_type;
-		typedef ptrdiff_t										difference_type;
-		typedef Compare											compare_type;
-		typedef Alloc											allocator_type;
-		typedef value_type&										reference;
-		typedef	const value_type& 								const_reference;
+		typedef Key													key_type;
+		typedef T													mapped_type;
+		typedef ft::pair<const Key, T>								value_type;
+		typedef size_t												size_type;
+		typedef ptrdiff_t											difference_type;
+		typedef Compare												compare_type;
+		typedef Alloc												allocator_type;
+		typedef value_type&											reference;
+		typedef	const value_type& 									const_reference;
 
-		typedef	typename Alloc::pointer							pointer;
-		typedef	typename Alloc::const_pointer					const_pointer;
-		typedef	ft::AVL_iterator<value_type>					iterator;
-		typedef	ft::AVL_const_iterator<value_type>				const_iterator;
-		typedef ft::reverse_iterator<iterator>					reverse_iterator;
-		typedef ft::reverse_iterator<const_iterator>			const_reverse_iterator;
+		typedef	typename Alloc::pointer								pointer;
+		typedef	typename Alloc::const_pointer						const_pointer;
+		typedef	ft::AVL_iterator<value_type>			iterator;
+		typedef	ft::AVL_const_iterator<value_type>	const_iterator;
+		typedef ft::reverse_iterator<iterator>						reverse_iterator;
+		typedef ft::reverse_iterator<const_iterator>				const_reverse_iterator;
 	private:
 		typedef	ft::Node<value_type>									Node;
 		typedef	ft::AVL_tree<value_type, compare_type, allocator_type>	tree_type;
@@ -153,25 +153,36 @@ namespace ft
 //다음은 키에 해당되는 값에 접근하는 친구들
 		mapped_type& at(const key_type& key)
 		{
-	//		std::cout << tree.root->value.first << std::endl;
+			/*
 			ft::Node<value_type>* target;
 			value_type vvv(key, mapped_type());
 			target = tree.searchNode(tree.root, vvv);
-//			std::cout << "!!!" << std::endl;
-	//		std::cout << target->value.first << std::endl;
 			if (!target)
 				throw (std::out_of_range("map bomwi bursurnam\n"));
 			return (target->value.second);
+			*/
+			iterator it = lower_bound(key);
+			if (it == end() || key_comp()(key, it->first) || size() == 0)
+			{
+				throw (std::out_of_range("map bomwi bursurnam\n"));
+			return (it->second);
 		}
 
 		const mapped_type& at(const key_type& key) const
 		{
+			/*
 			ft::Node<const value_type>* target;
 			value_type vvv(key, mapped_type());
 			target = tree.searchNode(tree.root, vvv);
 			if (!target)
 				throw (std::out_of_range("map bomwi bursurnam\n"));
 			return (target->value.second);
+			*/
+			const_iterator it = lower_bound(key);
+			if (it == end() || key_comp()(key, it->first) || size() == 0)
+			{
+				throw (std::out_of_range("map bomwi bursurnam\n"));
+			return (it->second);
 		}
 		//at와 역할을 비슷한데 값을 넣는 기능까지 있는 놈
 		//그래서 범위안에 없으면 추가하는것만 바뀜
@@ -179,8 +190,6 @@ namespace ft
 		mapped_type& operator [](const key_type& key)
 		{
 			iterator it = lower_bound(key);
-	//		std::cout << "key is " << key << std::endl;
-	//		std::cout << "end is " << end()->first << std::endl;
 			if (it == end() || key_comp()(key, it->first))
 			{
 				value_type vvv(key, mapped_type());
@@ -237,7 +246,7 @@ namespace ft
 
 		void clear()
 		{
-			tree.deleteDamn(tree.root);
+			erase(begin(), end());
 		}
 
 		//그담은 값을 추가해주는 insert
@@ -288,23 +297,13 @@ namespace ft
 		
 		void erase(iterator pos)
 		{
-			tree.root = tree.remove(tree.root, *pos);
+			tree.remove(tree.root, *pos);
 		}
 
 		void erase(iterator first, iterator last)
 		{
-			if (first == begin() && last == end())
-				clear();
-			else
-			{
-				while (first != last)
-				{
-				//	iterator it = first;
-				//	++first;
-				//	std::cout << it->first << " is removed\n";
-					erase(first++);//후위연산자 잡기술, 위는안됨
-				}
-			}
+			while (first != last)
+				erase(first++);//후위연산자 잡기술, 위는안됨
 		}
 
 		size_type erase(const key_type key)
@@ -312,7 +311,7 @@ namespace ft
 			value_type val = ft::make_pair(key, mapped_type());
 			if (tree.searchNode(tree.root, val))
 			{
-				tree.root = tree.remove(tree.root, val);
+				tree.remove(tree.root, val);
 				return (1);
 			}
 			return (0);
@@ -320,37 +319,65 @@ namespace ft
 
 		void swap(map& other)
 		{
-			Node *tmp = this->root;
-			this->root = other->root;
-			other->root = tmp;
+			tree_type tmp = this->tree;
+			this->tree = other.tree;
+			other.tree = tmp;
 		}
 
 		//요기서부턴 특정 요소를 찾는 친구들
 		
-		size_type count(const key_type key)
+		size_type count(const key_type key) const
 		{
+			if (find(key) == this->end())
+				return (0);
+			else
+				return (1);
+			/*
 			value_type val = ft::make_pair(key, mapped_type());
-			if (searchNode(tree.root, val))
+			ft::Node<value_type>* target = tree.searchNode(tree.root, val);
+			if (target)
 				return (1);
 			return (0);
+			*/
 		}
 
 		iterator find(const key_type& key)
 		{
+			iterator res = lower_bound(key);
+		//	std::cout << "key is " << key << std::endl;
+		//	std::cout << "res is " << res->first << std::endl;
+			if (res != end() && res->first == key)
+				return (res);
+			else
+			{
+		//		std::cout << "not same" << std::endl;
+				return (end());
+			}
+			/*
 			value_type val = ft::make_pair(key, mapped_type());
 			ft::Node<value_type>* target = tree.searchNode(tree.root, val);
 			if (target)
 				return (iterator(target));
 			return (end());
+			*/
 		}
 		
 		const_iterator find(const key_type& key) const
 		{
+			const_iterator res = lower_bound(key);
+			/*
 			value_type val = ft::make_pair(key, mapped_type());
-			ft::Node<const value_type>* target = tree.searchNode(tree.root, val);
+			ft::Node<value_type>* target = tree.searchNode(tree.root, val);
 			if (target)
 				return (const_iterator(target));
-			return (end());
+			*/
+			if (res != end() && res->first == key)
+				return (res);
+			else
+			{
+	//			std::cout << "not same" << std::endl;
+				return (end());
+			}
 		}
 
 		//less a < b ->true

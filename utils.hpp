@@ -6,7 +6,7 @@
 /*   By: juhpark <juhpark@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/15 10:13:14 by juhpark           #+#    #+#             */
-/*   Updated: 2021/12/10 21:45:42 by juhpark          ###   ########.fr       */
+/*   Updated: 2021/12/15 14:54:38 by juhpark          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -460,6 +460,8 @@ namespace ft
 		T2 second;
 
 		pair() : first(T1()), second(T2()) { }
+
+		~pair() { }
 
 		pair(const T1& x, const T2& y) : first(x), second(y) { }
 

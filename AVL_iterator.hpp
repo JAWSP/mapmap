@@ -6,7 +6,7 @@
 /*   By: juhpark <juhpark@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/22 11:33:58 by juhpark           #+#    #+#             */
-/*   Updated: 2021/12/14 20:21:29 by juhpark          ###   ########.fr       */
+/*   Updated: 2021/12/16 11:59:32 by juhpark          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,16 +40,11 @@ namespace ft
 		Node* who_is_your_parent(Node *node)
 		{
 			Node* res = node;
-			if (res)
-				std::cout << "start : " << res->value.first << std::endl;
+
 			if (!res)
 				return (NULL);
 			while (res->parent)
-			{
-				if (res)
-					std::cout << "res : " << res->value.first << std::endl;
 				res = res->parent;
-			}
 			return (res);
 		}
 
@@ -105,19 +100,16 @@ namespace ft
 		AVL_iterator &operator ++()//전위
 		{
 			Node *root = who_is_your_parent(current);
-		//	std::cout << "curr is " << current->value.first << std::endl;
 			if (current == largest(root))
 			{
 				max = current;
 				current = current->right;//end()의식
-		//		std::cout << "big" << max->value.first << std::endl;
 			}
 			else if (root)
 			{
 				if (current->right)
 				{
 					current = minest(current->right);
-		//			std::cout << "min res : " << current->value.first << std::endl;
 					return (*this);
 				}
 				Node *tmp = current;
@@ -151,7 +143,6 @@ namespace ft
 			if (!root)
 			{
 				current = max; //end면 맨 끝을 갖다대게, 없음 저기서 NULL를 벹
-				std::cout << "biggy " << max->value.first<< std::endl;
 				return (*this);
 			}
 			if (root)
@@ -173,14 +164,13 @@ namespace ft
 				else
 					current = tmp->parent;
 			}
-			std::cout << "big" << std::endl;
 			return (*this);
 		}
 
 		const AVL_iterator operator --(int)//후위
 		{
 			AVL_iterator tmp(*this);
-			operator--();
+			operahttps://www.youtube.com/hashtag/%EC%BD%94%EB%AF%B8%EB%94%94%EB%B9%85%EB%A6%AC%EA%B7%B8tor--();
 			return (tmp);
 		}
 
@@ -292,7 +282,7 @@ namespace ft
 		//const형으로 바꿔주는친구
 		operator AVL_iterator<const T> () const
 		{
-			return (AVL_iterator<const T>(this->current));
+			return (AVL_iterator<const T>(this->current, this->max));
 		}
 		//근데 안먹힘
 
@@ -302,9 +292,13 @@ namespace ft
 		//나의 머리론 직접 짜는게 한계인듯
 		AVL_const_iterator &operator ++()//전위
 		{
-			if (current == largest(who_is_your_parent(current)))
+			Node *root = who_is_your_parent(current);
+			if (current == largest(root))
+			{
+				max = current;
 				current = current->right;
-			else if (who_is_your_parent(current))
+			}
+			else if (root)
 			{
 				if (current->right)
 				{
@@ -335,13 +329,19 @@ namespace ft
 
 		AVL_const_iterator &operator --()//전위
 		{
-			if (current == minest(who_is_your_parent(current)))
+			Node *root = who_is_your_parent(current);
+			if (current == minest(root))
 				current = current->left;
-			else if (who_is_your_parent(current))
+			if (!root)
+			{
+				current = max;
+				return (*this);
+			}
+			if (root)
 			{
 				if (!current)
 				{
-					current = largest(who_is_your_parent(current)); //end면 맨 끝을 갖다대게, 없음 저기서 NULL를 벹
+					current = largest(root); //end면 맨 끝을 갖다대게, 없음 저기서 NULL를 벹
 					return (*this);
 				}
 				if (current->left)
