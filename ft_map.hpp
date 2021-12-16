@@ -6,7 +6,7 @@
 /*   By: juhpark <juhpark@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/03 14:28:40 by juhpark           #+#    #+#             */
-/*   Updated: 2021/12/16 11:59:46 by juhpark          ###   ########.fr       */
+/*   Updated: 2021/12/16 12:04:44 by juhpark          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,8 +54,8 @@ namespace ft
 
 		typedef	typename Alloc::pointer								pointer;
 		typedef	typename Alloc::const_pointer						const_pointer;
-		typedef	ft::AVL_iterator<value_type>			iterator;
-		typedef	ft::AVL_const_iterator<value_type>	const_iterator;
+		typedef	ft::AVL_iterator<value_type, Key, Compare>			iterator;
+		typedef	ft::AVL_const_iterator<value_type, Key, Compare>	const_iterator;
 		typedef ft::reverse_iterator<iterator>						reverse_iterator;
 		typedef ft::reverse_iterator<const_iterator>				const_reverse_iterator;
 	private:
@@ -165,6 +165,7 @@ namespace ft
 			if (it == end() || key_comp()(key, it->first) || size() == 0)
 			{
 				throw (std::out_of_range("map bomwi bursurnam\n"));
+			}
 			return (it->second);
 		}
 
@@ -182,6 +183,7 @@ namespace ft
 			if (it == end() || key_comp()(key, it->first) || size() == 0)
 			{
 				throw (std::out_of_range("map bomwi bursurnam\n"));
+			}
 			return (it->second);
 		}
 		//at와 역할을 비슷한데 값을 넣는 기능까지 있는 놈

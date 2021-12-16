@@ -6,7 +6,7 @@
 /*   By: juhpark <juhpark@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/22 11:33:58 by juhpark           #+#    #+#             */
-/*   Updated: 2021/12/16 11:59:32 by juhpark          ###   ########.fr       */
+/*   Updated: 2021/12/16 12:22:46 by juhpark          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,7 +30,7 @@ namespace ft
 	//다른 사람들이 한걸 보면 기존 트리에 저 반복자가 변수(?)로 들가는듯한느낌
 	//원본코드는 겁나 간단하게 트리의 반복자요 이리 했는데
 	//난 기존 컨테이너 반복자까지 뒤집어쓴 무언가가 되어버림
-	template<typename T>
+	template<typename T, typename Key, class Compare>
 	class AVL_iterator : public ft::iterator<ft::bidirectional_iterator_tag, T>
 	{
 	private:
@@ -78,17 +78,19 @@ namespace ft
 		typedef typename iterator_type::pointer					pointer;
 		Node*	current;
 		Node*	max; //넣은 이유 ->end()의 부모
+		Compare	comp;
 
 		AVL_iterator() : current(), max() { }
 		virtual ~AVL_iterator() { }
-		explicit AVL_iterator(Node* n) : current(n), max() { }
-		AVL_iterator(const AVL_iterator &A) : current(A.current), max(A.max) { }
+		explicit AVL_iterator(Node* n, const Compare& compare = Compare()) : current(n), max(), comp(compare) { }
+		AVL_iterator(const AVL_iterator &A) : current(A.current), max(A.max), comp(A.comp) { }
 		AVL_iterator& operator =(const AVL_iterator &A)
 		{
 			if (*this != A)
 			{
 				this->current = A.current;
 				this->max = A.max;
+				this->comp = A.comp;
 			}
 			return (*this);
 		}
@@ -198,21 +200,21 @@ namespace ft
 		}
 	};//bid
 
-	template<typename T>
-	bool operator==(const AVL_iterator<T>& x, const AVL_iterator<const T>& y)
+	template<typename T, typename Key, class Compare>
+	bool operator==(const AVL_iterator<T, Key, Compare>& x, const AVL_iterator<T, Key, Compare>& y)
 	{
 		return (x.current == y.current);
 	}
 
-	template<typename T>
-	bool operator!=(const AVL_iterator<T>& x, const AVL_iterator<const T>& y)
+	template<typename T, typename Key, class Compare>
+	bool operator!=(const AVL_iterator<T, Key, Compare>& x, const AVL_iterator<const T, Key, Compare>& y)
 	{
 		return (x.current != y.current);
 	}
 
 
 	//결국은 const변환자로 바꾸기에 실패하게 되는데...
-	template<typename T>
+	template<typename T, typename Key, class Compare = std::less<Key> >
 	class AVL_const_iterator : public ft::iterator<ft::bidirectional_iterator_tag, T>
 	{
 	private:
@@ -262,23 +264,26 @@ namespace ft
 		typedef value_type*										pointer;
 		Node*	current;
 		Node*	max; //넣은 이유 ->end()의 부모
+		Compare comp;
 
 		AVL_const_iterator() : current() {}
 		virtual ~AVL_const_iterator() { }
-		explicit AVL_const_iterator(ft::Node<T>* n) : current(const_cast<const Node *>(n)), max() { }
-		explicit AVL_const_iterator(Node* n) : current(n), max() { }
-		AVL_const_iterator(const ft::AVL_iterator<T> &A) : current(const_cast<const Node *>(A.current)), max(const_cast<const Node *>(A.max)) { }
-		AVL_const_iterator(const AVL_const_iterator &A) : current(A.current), max(A.max) { }
+		explicit AVL_const_iterator(ft::Node<T>* n, const Compare& compare = Compare()) : current(const_cast<const Node *>(n)), max(), comp(compare) { }
+		explicit AVL_const_iterator(Node* n, const Compare& compare = Compare()) : current(n), max(), comp(compare) { }
+		AVL_const_iterator(const ft::AVL_iterator<T, Key, Compare> &A) : current(const_cast<const Node *>(A.current)), max(const_cast<const Node *>(A.max)), comp(A.comp) { }
+		AVL_const_iterator(const AVL_const_iterator &A) : current(A.current), max(A.max), comp(A.comp) { }
 		AVL_const_iterator& operator =(const AVL_const_iterator &A)
 		{
 			if (*this != A)
 			{
 				this->current = A.current;
 				this->max = A.max;
+				this->comp = A.comp;
 			}
 			return (*this);
 		}
 
+		/*
 		//const형으로 바꿔주는친구
 		operator AVL_iterator<const T> () const
 		{
@@ -286,6 +291,7 @@ namespace ft
 		}
 		//근데 안먹힘
 
+		*/
 		//전진
 		//기존 tree에 있던 next, prev를 가져옴
 		//근데 접근하기엔 트리를 객체선언을 안해서.. ㅎㅎ
@@ -399,14 +405,14 @@ namespace ft
 		}
 	};//bid
 
-	template<typename T>
-	bool operator==(const AVL_const_iterator<T>& x, const AVL_const_iterator<const T>& y)
+	template<typename T, typename Key, class Compare>
+	bool operator==(const AVL_const_iterator<T, Key, Compare>& x, const AVL_const_iterator<T, Key, Compare>& y)
 	{
 		return (x.current == y.current);
 	}
 
-	template<typename T>
-	bool operator!=(const AVL_const_iterator<T>& x, const AVL_const_iterator<const T>& y)
+	template<typename T, typename Key, class Compare>
+	bool operator!=(const AVL_const_iterator<T, Key, Compare>& x, const AVL_const_iterator<T, Key, Compare>& y)
 	{
 		return (x.current != y.current);
 	}
