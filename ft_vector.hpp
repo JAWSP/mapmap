@@ -6,7 +6,7 @@
 /*   By: juhpark <juhpark@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/09/07 12:30:03 by juhpark           #+#    #+#             */
-/*   Updated: 2021/11/16 09:15:14 by juhpark          ###   ########.fr       */
+/*   Updated: 2021/12/20 14:58:30 by juhpark          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -672,7 +672,6 @@ namespace ft
 		typename vector<T, Alloc>::const_iterator it_y = y.begin();
 		for (; it_x < x.end(); it_x++, it_y++)
 		{
-//			std::cout << "x : " << *it_x << " y : " << *it_y << std::endl;
 			if (it_y == y.end())
 				return (false);
 			if (*it_x < *it_y)

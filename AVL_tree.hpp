@@ -6,7 +6,7 @@
 /*   By: juhpark <juhpark@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/15 12:22:36 by juhpark           #+#    #+#             */
-/*   Updated: 2021/12/15 16:46:06 by juhpark          ###   ########.fr       */
+/*   Updated: 2021/12/20 15:00:01 by juhpark          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,9 @@
 //map에선 이 트리의 루트노드만 있다고 한다
 //map의 맴버함수가 iterator를 조작하는듯하낟
 //일단 트리를 만들어보
+
+//당신은 지금 oop를 일부 포기한 한 남자의 코드를 보고 계십니다
+//스파게티는 역시 투움바 파스타
 
 namespace ft
 {
@@ -94,7 +97,7 @@ namespace ft
 		//다른 후보로는 맨 마지막 노드도 있다
 		allocator_type			node_alloc;
 		value_allocator_type	value_alloc;
-		Compare					node_compare;
+		Compare					comp;
 		size_type				count;
 
 //	public:
@@ -102,37 +105,26 @@ namespace ft
 		//디폴트는 원래도 저렇게 디폴트로 되어 있었다
 //		AVL_tree() {}
 
-		AVL_tree(const Compare& node_comp = Compare(), const value_allocator_type& value_allocator = value_allocator_type(), const allocator_type& node_allocator = allocator_type())
-			: node_compare(node_comp), value_alloc(value_allocator), node_alloc(node_allocator)
+		AVL_tree(const Compare& compare = Compare(), const value_allocator_type& value_allocator = value_allocator_type(), const allocator_type& node_allocator = allocator_type())
+			: comp(compare), value_alloc(value_allocator), node_alloc(node_allocator)
 		{
 			root = node_alloc.allocate(1);
 			root->left = NULL;
 			root->right = NULL;
 			root->parent = NULL;
-		//	curr = NULL;
 			count = 0;
 		}
 
 		AVL_tree(const AVL_tree& other)
 		{
 			root = other.root;
-		//	curr = other.curr;
 			node_alloc = other.node_alloc;
 			value_alloc = other.value_alloc;
-			node_compare = other.node_compare;
+			comp = other.comp;
 			count = other.count;
 		}
 
-//보통 이렇게 되겠지
-		~AVL_tree()
-		{
-		//	deleteDamn(root);
-		//	std::cout << "bye" << std::endl;
-			//파괴자는 어쩌지
-			//쟤 하나만 지워도 되는건가
-			//while문돌아서 처음부터 끝까지 돌아서 지우는게 아닌가
-			//일단은 임시로 위처럼 만들어봅시다
-		}
+		~AVL_tree() { }
 
 
 		//일단 만들어야 할게
@@ -194,8 +186,7 @@ namespace ft
 
 		Node* Rotate_RR(Node *z)
 		{
-			std::cout << "RR" << std::endl;
-	//		std::cout << "z is" << z->value.first << std::endl;
+		//	std::cout << "RR" << std::endl;
 			Node *y = z->right;
 			Node *T2 = NULL;
 
@@ -218,7 +209,7 @@ namespace ft
 
 		Node* Rotate_RL(Node *z)
 		{
-			std::cout << "RL" << std::endl;
+//			std::cout << "RL" << std::endl;
 			Node *y = z->right;
 			z->right = Rotate_LL(y);
 			z = Rotate_RR(z);
@@ -227,7 +218,6 @@ namespace ft
 
 		Node* Rotate_LR(Node *z)
 		{
-	//		std::cout << "LR" << std::endl;
 			Node *y = z->left;
 			z->left = Rotate_RR(y);//여기서 알아서 부모가 바뀌게 됨
 			z = Rotate_LL(z);
@@ -250,7 +240,8 @@ namespace ft
 				{
 					int left_child_height = get_height(node->left);
 					int right_child_height = get_height(node->right);
-					if (left_child_height > right_child_height)//더 큰놈이 실제 높이
+					//if (left_child_height > right_child_height)
+					if (comp(right_child_height, left_child_height))//더 큰놈이 실제 높이
 						height = left_child_height + 1;
 					else//만약 같을때 해당되는데 그럼 어차피 상관이 없는거자나
 						height = right_child_height + 1;
@@ -313,9 +304,12 @@ namespace ft
 				//없는노드에 parent 찾아서 세그먼트남
 			}
 			//아니면 계속 내려감
-			if (key > node->value)
+			if (comp(node->value.first, key.first))
+			{
 				node->right = insert(node->right, node, key);
-			else if (key < node->value)
+				std::cout << "node is " << node->right->value.first << std::endl;
+			}
+			else if (comp(key.first, node->value.first))
 				node->left = insert(node->left, node, key);
 			else //같은경우
 				return (node);
@@ -328,9 +322,9 @@ namespace ft
 	//		std::cout << "target is " << target.first << " node is " << node->value.first << std::endl;
 			if (node == NULL)
 				return ;
-			if (node->value.first > target.first)
+			if (comp(target.first, node->value.first))
 				remove(node->left, target);
-			else if (node->value.first < target.first)
+			else if (comp(node->value.first, target.first))
 				remove(node->right, target);
 			else if (node->value.first == target.first)
 			{
@@ -423,8 +417,6 @@ namespace ft
 					value_type tmp = DDamBBang->value;
 					//대신할 걸 찾아서
 					remove(root, DDamBBang->value);
-//					std::cout << "and root is " << root->value.first << " target is " << node->value.first << std::endl;
-				//임시
 				//원래 값만 바꿀려고 했는데 또또const const거참 유도리가 없어요 엉엉엉
 					Node* another = node_alloc.allocate(1);
 					node_alloc.construct(another, tmp);//새로운 노드를 할당
@@ -433,7 +425,6 @@ namespace ft
 					another->parent = node->parent;//노드 기준에서 부모 자식 연결
 					if (node->value == root->value)//root의 부모는 없기 떄문에 바꿔치기
 					{
-//						std::cout << "root is changed" << std::endl;
 						root = another;
 						another->parent = NULL;
 					}
@@ -449,17 +440,12 @@ namespace ft
 					node_alloc.destroy(node);//바꿔치기 완료했으면 점마 없애
 					node_alloc.deallocate(node, 1);
 					another = rebalance(another);
-//					if (root->right && another->right)
-//					if (root->value.first == 10)
-//						std::cout << "root is " << root->value.first << " ddambbang is " << another->value.first << std::endl;
 					return ;
-		//			return (another);
 					//그걸 삭제할 값 대신으로 넣는다
 				}
 			}
 			else
 				return ;
-	//		std::cout << "rebalance " << std::endl;
 			node = rebalance(node);
 		}
 		//그 다음은 최대,최소값 찾는 노드
@@ -546,24 +532,16 @@ namespace ft
 		Node* searchNode(Node *tree, const value_type& target)
 		{
 			Node *res = tree;
-			//std::cout << res->value.first << " " << target.first << std::endl;
 			if (res)
 			{
-				if (res->value.first > target.first && res->left)
-				{
-					//std::cout << "ASd" << std::endl;
+				//if (res->value.first > target.first && res->left)
+				if (comp(target.first, res->value.first) && res->left)
 					return (searchNode(res->left, target));
-				}
-				else if (res->value.first < target.first && res->right)
-				{
-					//std::cout << "BSd" << std::endl;
+				//else if (res->value.first < target.first && res->right)
+				else if (comp(res->value.first, target.first) && res->right)
 					return (searchNode(res->right, target));
-				}
 				else if (res->value.first == target.first)
-				{
-					//std::cout << "CSd" << std::endl;
 					return (res);
-				}
 			}
 			//std::cout << "is NULL" << std::endl;
 			return (NULL);
@@ -579,6 +557,7 @@ namespace ft
 		}
 
 		//이걸 이용하면 부분을 지우는 것두 가능하지 않을까
+		//응 터져
 
 		//비어있나 보는거
 		//추가 될때마다 추가된 부분을 curr가 저장하니
@@ -643,20 +622,20 @@ namespace ft
 		template<class T, class Compare, class Alloc, class N_Alloc>
 		bool operator <(const AVL_tree<T, Compare, Alloc, N_Alloc>& x, const AVL_tree<T, Compare, Alloc, N_Alloc>& y)
 		{
-			ft::Node<T>* cur = x.minest();
-			ft::Node<T>* fin = x.largest();
-			ft::Node<T>* cop = y.minest();
-			ft::Node<T>* y_fin = y.largest();
-			while (cur != fin)
+			ft::Node<T>* cur = x.const_minest(x.root);
+			ft::Node<T>* cop = y.const_minest(y.root);
+			for (size_t i = 1; i <= x.count; i++)
 			{
-				if (cop == y_fin)
+				if (i > y.count)
 					return (false);
 				if (cur->value < cop->value)
 					return (true);
+				if (cur->value > cop->value)
+					return (false);
 				cur = x.nextNode(cur);
 				cop = y.nextNode(cop);
 			}
-			if (cop != y_fin)
+			if (x.count < y.count)//y가 남아있는경우
 				return (true);
 			return (false);
 		}

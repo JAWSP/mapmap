@@ -6,7 +6,7 @@
 /*   By: juhpark <juhpark@student.42seoul.kr>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/11/03 14:28:40 by juhpark           #+#    #+#             */
-/*   Updated: 2021/12/16 12:04:44 by juhpark          ###   ########.fr       */
+/*   Updated: 2021/12/20 18:00:44 by juhpark          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,8 +54,8 @@ namespace ft
 
 		typedef	typename Alloc::pointer								pointer;
 		typedef	typename Alloc::const_pointer						const_pointer;
-		typedef	ft::AVL_iterator<value_type, Key, Compare>			iterator;
-		typedef	ft::AVL_const_iterator<value_type, Key, Compare>	const_iterator;
+		typedef	ft::AVL_iterator<value_type>						iterator;
+		typedef	ft::AVL_const_iterator<value_type>					const_iterator;
 		typedef ft::reverse_iterator<iterator>						reverse_iterator;
 		typedef ft::reverse_iterator<const_iterator>				const_reverse_iterator;
 	private:
@@ -122,24 +122,15 @@ namespace ft
 		{
 			if (*this != other)
 			{
-				
-			//	std::cout << (--other.end())->second << std::endl;
-
 				clear();
-		//		for (const_iterator it = other.begin(); it != other.end(); it++)
-		//			std::cout << it->second << std::endl;
-				std::cout << "qwqwqw" << std::endl;
 				this->tree.node_alloc = other.tree.node_alloc;
 				this->tree.value_alloc = other.tree.value_alloc;
-				this->tree.node_compare = other.tree.node_compare;
+				this->tree.comp = other.tree.comp;
 				this->tree.count = 0;
 				this->alloc = other.alloc;
 				this->comp = other.comp;
 
 				this->insert(other.begin(), other.end());
-	//			std::cout << "after" << std::endl;
-	//			for (const_iterator it = this->begin(); it != this->end(); it++)
-	//				std::cout << it->second << std::endl;
 			}
 			return (*this);
 		}
@@ -163,27 +154,15 @@ namespace ft
 			*/
 			iterator it = lower_bound(key);
 			if (it == end() || key_comp()(key, it->first) || size() == 0)
-			{
 				throw (std::out_of_range("map bomwi bursurnam\n"));
-			}
 			return (it->second);
 		}
 
 		const mapped_type& at(const key_type& key) const
 		{
-			/*
-			ft::Node<const value_type>* target;
-			value_type vvv(key, mapped_type());
-			target = tree.searchNode(tree.root, vvv);
-			if (!target)
-				throw (std::out_of_range("map bomwi bursurnam\n"));
-			return (target->value.second);
-			*/
 			const_iterator it = lower_bound(key);
 			if (it == end() || key_comp()(key, it->first) || size() == 0)
-			{
 				throw (std::out_of_range("map bomwi bursurnam\n"));
-			}
 			return (it->second);
 		}
 		//at와 역할을 비슷한데 값을 넣는 기능까지 있는 놈
@@ -194,13 +173,16 @@ namespace ft
 			iterator it = lower_bound(key);
 			if (it == end() || key_comp()(key, it->first))
 			{
+			//	std::cout << "a" << std::endl;
 				value_type vvv(key, mapped_type());
 				it = insert(it, vvv);//여기에 value_type(key, 0)이 안되는 이유는 뭘까
+			//	std::cout << "result is " << it->first << std::endl;
 			}
 			else if (size() == 0)
 			{
 				value_type vvv(key, mapped_type());
 				it = insert(it, vvv);
+			//	std::cout << "result is " << it->first << std::endl;
 			}
 			return (it->second);
 		}
@@ -224,20 +206,20 @@ namespace ft
 			return (++const_iterator(tree.const_largest(tree.root)));
 		}
 
-		reverse_iterator rbegin() { return (reverse_iterator(tree.largest(tree.root))); }
-		const_reverse_iterator rbegin() const { return (const_reverse_iterator(tree.largest(tree.root))); }
+		reverse_iterator rbegin() { return (reverse_iterator(this->end())); }
+		const_reverse_iterator rbegin() const { return (const_reverse_iterator(this->end())); }
 
 		reverse_iterator rend()
 		{
 			if (size() == 0)
 				return (rbegin());
-			return (reverse_iterator(tree.minest(tree.root)->left));
+			return (reverse_iterator(--this->begin()));
 		}
 		const_reverse_iterator rend() const
 		{
 			if (size() == 0)
 				return (rbegin());
-			return (const_reverse_iterator(tree.minest(tree.rooot)->left));
+			return (const_reverse_iterator(--this->begin()));
 		}
 
 
@@ -278,6 +260,7 @@ namespace ft
 				return (iterator(target));
 			tree.root = tree.insert(tree.root, NULL, value);
 			target = tree.searchNode(tree.root, value);
+//			std::cout << "target is " << target->value.first << std::endl;
 			return (iterator(target));
 		}
 
@@ -346,15 +329,10 @@ namespace ft
 		iterator find(const key_type& key)
 		{
 			iterator res = lower_bound(key);
-		//	std::cout << "key is " << key << std::endl;
-		//	std::cout << "res is " << res->first << std::endl;
 			if (res != end() && res->first == key)
 				return (res);
 			else
-			{
-		//		std::cout << "not same" << std::endl;
 				return (end());
-			}
 			/*
 			value_type val = ft::make_pair(key, mapped_type());
 			ft::Node<value_type>* target = tree.searchNode(tree.root, val);
@@ -362,37 +340,29 @@ namespace ft
 				return (iterator(target));
 			return (end());
 			*/
+			//요건 사장된거
 		}
 		
 		const_iterator find(const key_type& key) const
 		{
 			const_iterator res = lower_bound(key);
-			/*
-			value_type val = ft::make_pair(key, mapped_type());
-			ft::Node<value_type>* target = tree.searchNode(tree.root, val);
-			if (target)
-				return (const_iterator(target));
-			*/
 			if (res != end() && res->first == key)
 				return (res);
 			else
-			{
-	//			std::cout << "not same" << std::endl;
 				return (end());
-			}
 		}
 
 		//less a < b ->true
 		//a > b -> false
 		iterator lower_bound(const key_type& key)
 		{
-			if (key < tree.minest(tree.root)->value.first)
-				return (this->begin());
 			Node* cur = tree.root;
-			while (1) 
+			if (size() == 0)
+				return (iterator(cur));
+			if (comp(key, tree.const_minest(tree.root)->value.first))
+				return (this->begin());
+			while (cur) 
 			{
-				//if (cur->right == NULL)
-				//	std::cout << "yeah" << std::endl;
 //				if (cur == NULL)//제일 크면 없을 수 있지
 //					return (this->end());
 				if (cur->left == NULL && cur->right == NULL)
@@ -402,11 +372,7 @@ namespace ft
 					if (cur->right)
 						cur = cur->right;
 					else
-					{
-						//if (++iterator(cur, tree.root) == this->end())
-						//	std::cout << "endend" << std::endl;
 						return (++iterator(cur));//걔보다 크긴한데 없으면 걔 다음꺼지
-					}
 				}
 				else if (cur->value.first == key)
 					return (iterator(cur));
@@ -418,19 +384,21 @@ namespace ft
 						return (iterator(cur));
 				}
 			}
-			if (size() == 0 || cur->value.first == key)//그냥 비어있을때나 맨밑 값이 같은경우
+			if (cur->value.first == key)//그냥 비어있을때나 맨밑 값이 같은경우
 				return (iterator(cur));
-			//std::cout << "next" << std::endl;
+		//	std::cout << "next" << std::endl;
 			return (++iterator(cur));
 		}
 		
 		const_iterator lower_bound(const key_type& key) const
-		{	
-			if (key < tree.const_minest(tree.root)->value.first)
-				return (this->begin());
+		{
 			Node* cur = tree.root;
+			if (size() == 0)
+				return (const_iterator(cur));
+			if (comp(key, tree.const_minest(tree.root)->value.first))
+				return (this->begin());
 			//최소값보다 작으면 -> 최소값을 리턴
-			while (1) 
+			while (cur) 
 			{
 				if (cur->left == NULL && cur->right == NULL)
 					break ;
@@ -451,9 +419,8 @@ namespace ft
 						return (const_iterator(cur));
 				}
 			}
-			if (size() == 0 || cur->value.first == key)
+			if (cur->value.first == key)
 				return (const_iterator(cur));
-			//std::cout << "next" << std::endl;
 			return (++const_iterator(cur));
 		}
 		
@@ -547,14 +514,14 @@ namespace ft
 		template <class K, class V, class C, class A>
 		friend bool operator ==(const map<K, V, C, A>&, const map<K, V, C, A>&);
 		template <class K, class V, class C, class A>
-		friend bool operator <(const map<K, T, C, A>&, const map<K, V, C, A>&);
+		friend bool operator <(const map<K, V, C, A>&, const map<K, V, C, A>&);
 
 	};//map
 
 	template <class Key, class T, class Compare, class Alloc>
 	bool operator ==(const ft::map<Key, T, Compare, Alloc>& x, const ft::map<Key, T, Compare, Alloc>& y)
 	{
-			return (x.tree == y.tree);
+		return (x.tree == y.tree);
 	}
 	template <class Key, class T, class Compare, class Alloc>
 	bool operator !=(const ft::map<Key, T, Compare, Alloc>& x, const ft::map<Key, T, Compare, Alloc>& y)
